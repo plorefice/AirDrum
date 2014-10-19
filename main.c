@@ -73,6 +73,14 @@ MPU9150_HandleTypeDef  IMU_R_Handler;
 static void SystemClock_Config(void);
 
 /* Private functions ---------------------------------------------------------*/
+
+void MIDI_Task_Callback (void const *args)
+{
+	MIDI_SendMsg (0x99, 0x26, 0x7F);
+}
+
+osTimerDef (MIDI_Task, MIDI_Task_Callback);
+
 /**
   * @brief  Main program
   * @param  None
@@ -80,6 +88,8 @@ static void SystemClock_Config(void);
   */
 int main(void)
 {
+	osTimerId         tid;
+	
 	I2C_InitTypeDef   I2C_InitStruct;
 	GPIO_InitTypeDef  GPIO_InitStruct;
 	
@@ -197,6 +207,9 @@ int main(void)
 	USBD_Connect    (USB_Device);
 
 #ifdef RTE_CMSIS_RTOS                   // when using CMSIS RTOS
+	tid = osTimerCreate (osTimer (MIDI_Task), osTimerPeriodic, NULL); 
+	osTimerStart (tid, 1000);
+	
   osKernelStart ();                     // start thread execution 
 #else
 

@@ -45,7 +45,7 @@
 
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
-#define IMU_L
+//#define IMU_L
 //#define IMU_R
 
 /* Left IMU configuration */
