@@ -45,8 +45,10 @@
 
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
-//#define IMU_L
+#define IMU_L
 //#define IMU_R
+#define TH 5000
+#define MAX_FORCE 23000.0f
 
 /* Left IMU configuration */
 #define IMU_L_I2C                          I2C1
@@ -70,7 +72,7 @@
 #define IMU_L_IRQ_Handler                  EXTI4_IRQHandler
 
 /* Right IMU configuration */
-#define IMU_R_I2C                          I2C2
+#define IMU_R_I2C                          I2C3
 #define IMU_R_I2C_ENABLE                   __I2C2_CLK_ENABLE
 #define IMU_R_I2C_AF                       GPIO_AF4_I2C2
 
@@ -129,6 +131,19 @@ extern MPU9150_HandleTypeDef               IMU_R_Handler;
 
 /* Exported functions ------------------------------------------------------- */
 void Error_Handler(void);
+
+typedef struct
+{
+	uint8_t	click;
+	uint8_t vel;
+}Axis;
+
+typedef struct
+{
+	Axis x;
+	Axis y;
+	Axis z;
+}IMU_Click_Detection;
 
 #endif /* __MAIN_H */
 

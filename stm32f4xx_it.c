@@ -58,10 +58,61 @@
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
-
+extern int16_t 							IMU_L_Buffer[3];
+extern void 								MIDI_SendMsg (uint8_t type, uint8_t note, uint8_t velocity);
+extern IMU_Click_Detection	IMU_L_Detection;
+extern IMU_Click_Detection	IMU_R_Detection;
+uint8_t											th_X, th_Y, th_Z;
+uint16_t										max_X, max_Y, max_Z;
 /* Private function prototypes -----------------------------------------------*/
 /* Private functions ---------------------------------------------------------*/
-
+void ClickDetection(IMU_Click_Detection *IMU, int16_t * buffer)
+{
+		int16_t x = buffer[0];
+		int16_t y = buffer[1];
+		int16_t z = buffer[2];
+		
+		if(th_X){
+			if(x < TH) {
+				
+				if(max_X > MAX_FORCE)
+					max_X = MAX_FORCE;
+				IMU->x.vel  = (max_X/MAX_FORCE) * 127;
+				IMU->x.click = 1;
+				th_X = 0;
+				max_X = 0;
+			} else if(x > max_X) {
+				max_X = x;
+			}
+		} else if(x > TH){
+			max_X = x;
+			th_X = 1;
+		}
+		
+		if(th_Y && y < TH){
+			
+			if(max_Y > MAX_FORCE)
+				max_Y = MAX_FORCE;
+			IMU->y.vel = (max_Y/MAX_FORCE) * 127;
+			IMU->y.click = 1;
+			th_Y = 0;
+		} else if(y > TH){
+			max_Y = y;
+			th_Y = 1;
+		}
+		
+		if(th_Z && z < TH){
+				
+			if(max_Z > MAX_FORCE)
+				max_Z = MAX_FORCE;
+			IMU->z.vel = (max_Z/MAX_FORCE) * 127;
+			IMU->z.click = 1;	
+			th_Z = 0;
+		} else if(z > TH){
+			max_Z = z;
+			th_Z = 1;
+		}
+}
 /******************************************************************************/
 /*            Cortex-M4 Processor Exceptions Handlers                         */
 /******************************************************************************/
@@ -193,6 +244,8 @@ void IMU_L_IRQ_Handler (void)
 	{
 		HAL_GPIO_TogglePin (LED_IRQ_L_PORT, LED_IRQ_L_PIN);
 		
+		MPU9150_ReadGyro (&IMU_L_Handler, IMU_L_Buffer);
+		ClickDetection(&IMU_L_Detection, IMU_L_Buffer);
 		__HAL_GPIO_EXTI_CLEAR_IT (IMU_L_IRQ_PIN);
 	}
 }
@@ -204,6 +257,7 @@ void IMU_R_IRQ_Handler (void)
 	if (__HAL_GPIO_EXTI_GET_IT (IMU_R_IRQ_PIN))
 	{
 		HAL_GPIO_TogglePin (LED_IRQ_R_PORT, LED_IRQ_R_PIN);
+		
 		
 		__HAL_GPIO_EXTI_CLEAR_IT (IMU_R_IRQ_PIN);
 	}

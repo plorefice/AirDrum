@@ -68,6 +68,10 @@ I2C_HandleTypeDef      IMU_R_I2C_Handler;
 
 MPU9150_HandleTypeDef  IMU_L_Handler;
 MPU9150_HandleTypeDef  IMU_R_Handler;
+IMU_Click_Detection		 IMU_L_Detection;
+IMU_Click_Detection		 IMU_R_Detection;
+
+int16_t IMU_L_Buffer[3];
 
 /* Private function prototypes -----------------------------------------------*/
 static void SystemClock_Config(void);
@@ -76,7 +80,18 @@ static void SystemClock_Config(void);
 
 void MIDI_Task_Callback (void const *args)
 {
-	MIDI_SendMsg (0x99, 0x26, 0x7F);
+
+	if(IMU_L_Detection.x.click)
+		MIDI_SendMsg(0x99, 0x2C, IMU_L_Detection.x.vel);
+	if(IMU_L_Detection.y.click)
+		MIDI_SendMsg(0x99, 0x26, IMU_L_Detection.y.vel);
+	if(IMU_L_Detection.z.click)
+		MIDI_SendMsg(0x99, 0x31, IMU_L_Detection.z.vel);
+	
+	IMU_L_Detection.x.click = 0;
+	IMU_L_Detection.y.click = 0;
+	IMU_L_Detection.z.click = 0;
+		
 }
 
 osTimerDef (MIDI_Task, MIDI_Task_Callback);
@@ -208,7 +223,7 @@ int main(void)
 
 #ifdef RTE_CMSIS_RTOS                   // when using CMSIS RTOS
 	tid = osTimerCreate (osTimer (MIDI_Task), osTimerPeriodic, NULL); 
-	osTimerStart (tid, 1000);
+	osTimerStart (tid, 10);
 	
   osKernelStart ();                     // start thread execution 
 #else
