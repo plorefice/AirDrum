@@ -44,11 +44,24 @@
 #include "mpu9150_hal.h"
 
 /* Exported types ------------------------------------------------------------*/
+typedef struct
+{
+	uint8_t	click;
+	uint8_t vel;
+} Axis;
+
+typedef struct
+{
+	Axis x;
+	Axis y;
+	Axis z;
+} IMU_Click_Detection;
+
 /* Exported constants --------------------------------------------------------*/
 #define IMU_L
 //#define IMU_R
-#define TH 5000
-#define MAX_FORCE 23000.0f
+#define TH                                 0x07FF
+#define MAX_FORCE                          32767.0f
 
 /* Left IMU configuration */
 #define IMU_L_I2C                          I2C1
@@ -129,21 +142,14 @@ extern I2C_HandleTypeDef                   IMU_R_I2C_Handler;
 extern MPU9150_HandleTypeDef               IMU_L_Handler;
 extern MPU9150_HandleTypeDef               IMU_R_Handler;
 
+extern IMU_Click_Detection                 IMU_L_Detection;
+extern IMU_Click_Detection                 IMU_R_Detection;
+
+extern int16_t                             IMU_L_Buffer[3];
+extern int16_t                             IMU_R_Buffer[3];
+
 /* Exported functions ------------------------------------------------------- */
 void Error_Handler(void);
-
-typedef struct
-{
-	uint8_t	click;
-	uint8_t vel;
-}Axis;
-
-typedef struct
-{
-	Axis x;
-	Axis y;
-	Axis z;
-}IMU_Click_Detection;
 
 #endif /* __MAIN_H */
 

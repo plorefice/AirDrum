@@ -58,60 +58,67 @@
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
-extern int16_t 							IMU_L_Buffer[3];
-extern void 								MIDI_SendMsg (uint8_t type, uint8_t note, uint8_t velocity);
-extern IMU_Click_Detection	IMU_L_Detection;
-extern IMU_Click_Detection	IMU_R_Detection;
-uint8_t											th_X, th_Y, th_Z;
-uint16_t										max_X, max_Y, max_Z;
 /* Private function prototypes -----------------------------------------------*/
 /* Private functions ---------------------------------------------------------*/
-void ClickDetection(IMU_Click_Detection *IMU, int16_t * buffer)
+
+void ClickDetection(IMU_Click_Detection *IMU_ClickStruct, int16_t * buffer)
 {
-		int16_t x = buffer[0];
-		int16_t y = buffer[1];
-		int16_t z = buffer[2];
-		
-		if(th_X){
-			if(x < TH) {
-				
-				if(max_X > MAX_FORCE)
-					max_X = MAX_FORCE;
-				IMU->x.vel  = (max_X/MAX_FORCE) * 127;
-				IMU->x.click = 1;
-				th_X = 0;
-				max_X = 0;
-			} else if(x > max_X) {
-				max_X = x;
-			}
-		} else if(x > TH){
-			max_X = x;
-			th_X = 1;
-		}
-		
-		if(th_Y && y < TH){
+	static uint8_t  th_x  = 0, th_y  = 0, th_z  = 0;
+	static int16_t  max_x = 0, max_y = 0, max_z = 0;
+	
+	int16_t x = buffer[0];
+	int16_t y = buffer[1];
+	int16_t z = buffer[2];
+	
+	if(th_x){
+		if(x < TH) {
 			
-			if(max_Y > MAX_FORCE)
-				max_Y = MAX_FORCE;
-			IMU->y.vel = (max_Y/MAX_FORCE) * 127;
-			IMU->y.click = 1;
-			th_Y = 0;
-		} else if(y > TH){
-			max_Y = y;
-			th_Y = 1;
+			if(max_x > MAX_FORCE)
+				max_x = MAX_FORCE;
+			IMU_ClickStruct->x.vel  = (max_x/MAX_FORCE) * 127;
+			IMU_ClickStruct->x.click = 1;
+			th_x = 0;
+			max_x = 0;
+		} else if(x > max_x) {
+			max_x = x;
 		}
+	} else if(x > TH){
+		max_x = x;
+		th_x = 1;
+	}
+	
+	if(th_y && y < TH){
 		
-		if(th_Z && z < TH){
-				
-			if(max_Z > MAX_FORCE)
-				max_Z = MAX_FORCE;
-			IMU->z.vel = (max_Z/MAX_FORCE) * 127;
-			IMU->z.click = 1;	
-			th_Z = 0;
-		} else if(z > TH){
-			max_Z = z;
-			th_Z = 1;
+		if(max_y > MAX_FORCE)
+			max_y = MAX_FORCE;
+		IMU_ClickStruct->y.vel = (max_y/MAX_FORCE) * 127;
+		IMU_ClickStruct->y.click = 1;
+		th_y = 0;
+	}
+	else if(y > TH){
+		max_y = y;
+		th_y = 1;
+	}
+	
+	if(th_z)                                 // If I'm detecting a click
+	{
+		if (z >= th_z)                         // and I'm above the threshold
+		{ 
+			max_z = (z > max_z) ? z : max_z;     // update the maximum.
 		}
+		else {                                 // If I'm not above the threshold
+			IMU_ClickStruct->z.click = 1;        // a click has been detected
+			IMU_ClickStruct->z.vel = (uint8_t)   // and the velocity is calculated
+			  ((max_z / MAX_FORCE) * 127.0f);    // based on the strength.
+			th_z = 0;                            // Save everything and reset click
+			max_z = 0;                           // and maximum strength.
+		}
+	}
+	else if(z > TH)                          // If I have not started dectection,
+	{
+		max_z = z;                             // updated the maximum
+		th_z = 1;                              // and start detecting.
+	}
 }
 /******************************************************************************/
 /*            Cortex-M4 Processor Exceptions Handlers                         */
@@ -245,7 +252,8 @@ void IMU_L_IRQ_Handler (void)
 		HAL_GPIO_TogglePin (LED_IRQ_L_PORT, LED_IRQ_L_PIN);
 		
 		MPU9150_ReadGyro (&IMU_L_Handler, IMU_L_Buffer);
-		ClickDetection(&IMU_L_Detection, IMU_L_Buffer);
+		ClickDetection   (&IMU_L_Detection, IMU_L_Buffer);
+		
 		__HAL_GPIO_EXTI_CLEAR_IT (IMU_L_IRQ_PIN);
 	}
 }
