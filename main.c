@@ -63,17 +63,17 @@ uint32_t HAL_GetTick(void) {
 
 /* Global variables ----------------------------------------------------------*/
 
-I2C_HandleTypeDef      IMU_L_I2C_Handler;
-I2C_HandleTypeDef      IMU_R_I2C_Handler;
+I2C_HandleTypeDef          IMU_L_I2C_Handler;
+I2C_HandleTypeDef          IMU_R_I2C_Handler;
 
-MPU9150_HandleTypeDef  IMU_L_Handler;
-MPU9150_HandleTypeDef  IMU_R_Handler;
+MPU9150_HandleTypeDef      IMU_L_Handler;
+MPU9150_HandleTypeDef      IMU_R_Handler;
 
-IMU_Click_Detection    IMU_L_Detection;
-IMU_Click_Detection    IMU_R_Detection;
+MPU9150_ClickTypeDef       IMU_L_ClickDetection;
+MPU9150_ClickTypeDef       IMU_R_ClickDetection;
 
-int16_t                IMU_L_Buffer[3];
-int16_t                IMU_R_Buffer[3];
+int16_t                    IMU_L_Buffer[3];
+int16_t                    IMU_R_Buffer[3];
 
 /* Private function prototypes -----------------------------------------------*/
 static void SystemClock_Config(void);
@@ -87,12 +87,12 @@ void MIDI_Task_Callback (void const *args)
 //		MIDI_SendMsg(0x99, 0x2C, IMU_L_Detection.x.vel);
 //	if(IMU_L_Detection.y.click)
 //		MIDI_SendMsg(0x99, 0x26, IMU_L_Detection.y.vel);
-	if(IMU_L_Detection.z.click)
-		MIDI_SendMsg(0x99, 0x26, IMU_L_Detection.z.vel);
+	if(IMU_L_ClickDetection.z.click)
+		MIDI_SendMsg(0x99, 0x26, IMU_L_ClickDetection.z.vel);
 	
-	IMU_L_Detection.x.click = 0;
-	IMU_L_Detection.y.click = 0;
-	IMU_L_Detection.z.click = 0;
+	IMU_L_ClickDetection.x.click = 0;
+	IMU_L_ClickDetection.y.click = 0;
+	IMU_L_ClickDetection.z.click = 0;
 		
 }
 

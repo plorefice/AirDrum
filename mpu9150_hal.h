@@ -47,13 +47,31 @@ typedef struct
 	uint8_t Sources;
 } MPU9150_IRQTypeDef;
 
+typedef struct
+{
+	uint8_t	Click;
+	uint8_t Threshold;
+	uint8_t Force;
+	uint8_t Velocity;
+} MPU9150_Axis;
+
+typedef struct
+{
+	Axis X;
+	Axis Y;
+	Axis Z;
+} MPU9150_ClickTypeDef;
+
 /* MPU9150 Handle */
 typedef struct 
 {
-	I2C_HandleTypeDef   *I2Cx;
-	MPU9150_InitTypeDef  Init;
-	MPU9150_IRQTypeDef   IRQ;
+	I2C_HandleTypeDef    *I2Cx;
+	MPU9150_InitTypeDef   Init;
+	MPU9150_IRQTypeDef    IRQ;
+	MPU9150_ClickTypeDef  Click;
 } MPU9150_HandleTypeDef;
+
+/* MPU9150 click detection */
 
 
 /* Exported macros -----------------------------------------------------------*/
@@ -61,6 +79,9 @@ typedef struct
 #define bswap16(X)                (((X & 0xFF00) >> 8) | ((X & 0x00FF) << 8))
 
 /* Exported constants --------------------------------------------------------*/
+
+#define TH                                                        0x07FF
+#define MAX_FORCE                                                 32767.0f
 
 /* Max write length (in bytes) */
 #define MPU9150_MAX_WRITE                                          0x10
@@ -258,10 +279,11 @@ void     MPU9150_Init  (MPU9150_HandleTypeDef *hmpu);
 void     MPU9150_Read  (MPU9150_HandleTypeDef *hmpu, uint8_t reg_addr, uint8_t *buf, uint8_t len);
 void     MPU9150_Write (MPU9150_HandleTypeDef *hmpu, uint8_t reg_addr, uint8_t *buf, uint8_t len);
 
-void     MPU9150_ReadAccel (MPU9150_HandleTypeDef *hmpu, int16_t *pBuffer);
-void     MPU9150_ReadGyro  (MPU9150_HandleTypeDef *hmpu, int16_t *pBuffer);
-uint16_t MPU9150_ReadFIFO  (MPU9150_HandleTypeDef *hmpu, int16_t *pBuffer);
+void     MPU9150_ReadAccel   (MPU9150_HandleTypeDef *hmpu, int16_t *pBuffer);
+void     MPU9150_ReadGyro    (MPU9150_HandleTypeDef *hmpu, int16_t *pBuffer);
+uint16_t MPU9150_ReadFIFO    (MPU9150_HandleTypeDef *hmpu, int16_t *pBuffer);
 
+void     MPU9150_DetectClick (MPU9150_HandleTypeDef *hmpu, int16_t * buffer);
 
 #ifdef __cplusplus
 }

@@ -41,6 +41,7 @@
 #include "main.h"
 #include "stm32f4xx_hal.h"
 #include "stm32f4xx_it.h"
+#include "mpu9150_hal.h"
 
 #ifdef _RTE_
 #include "RTE_Components.h"             // Component selection
@@ -61,65 +62,6 @@
 /* Private function prototypes -----------------------------------------------*/
 /* Private functions ---------------------------------------------------------*/
 
-void ClickDetection(IMU_Click_Detection *IMU_ClickStruct, int16_t * buffer)
-{
-	static uint8_t  th_x  = 0, th_y  = 0, th_z  = 0;
-	static int16_t  max_x = 0, max_y = 0, max_z = 0;
-	
-	int16_t x = buffer[0];
-	int16_t y = buffer[1];
-	int16_t z = buffer[2];
-	
-	if(th_x){
-		if(x < TH) {
-			
-			if(max_x > MAX_FORCE)
-				max_x = MAX_FORCE;
-			IMU_ClickStruct->x.vel  = (max_x/MAX_FORCE) * 127;
-			IMU_ClickStruct->x.click = 1;
-			th_x = 0;
-			max_x = 0;
-		} else if(x > max_x) {
-			max_x = x;
-		}
-	} else if(x > TH){
-		max_x = x;
-		th_x = 1;
-	}
-	
-	if(th_y && y < TH){
-		
-		if(max_y > MAX_FORCE)
-			max_y = MAX_FORCE;
-		IMU_ClickStruct->y.vel = (max_y/MAX_FORCE) * 127;
-		IMU_ClickStruct->y.click = 1;
-		th_y = 0;
-	}
-	else if(y > TH){
-		max_y = y;
-		th_y = 1;
-	}
-	
-	if(th_z)                                 // If I'm detecting a click
-	{
-		if (z >= th_z)                         // and I'm above the threshold
-		{ 
-			max_z = (z > max_z) ? z : max_z;     // update the maximum.
-		}
-		else {                                 // If I'm not above the threshold
-			IMU_ClickStruct->z.click = 1;        // a click has been detected
-			IMU_ClickStruct->z.vel = (uint8_t)   // and the velocity is calculated
-			  ((max_z / MAX_FORCE) * 127.0f);    // based on the strength.
-			th_z = 0;                            // Save everything and reset click
-			max_z = 0;                           // and maximum strength.
-		}
-	}
-	else if(z > TH)                          // If I have not started dectection,
-	{
-		max_z = z;                             // updated the maximum
-		th_z = 1;                              // and start detecting.
-	}
-}
 /******************************************************************************/
 /*            Cortex-M4 Processor Exceptions Handlers                         */
 /******************************************************************************/
@@ -251,8 +193,8 @@ void IMU_L_IRQ_Handler (void)
 	{
 		HAL_GPIO_TogglePin (LED_IRQ_L_PORT, LED_IRQ_L_PIN);
 		
-		MPU9150_ReadGyro (&IMU_L_Handler, IMU_L_Buffer);
-		ClickDetection   (&IMU_L_Detection, IMU_L_Buffer);
+		MPU9150_ReadGyro    (&IMU_L_Handler, IMU_L_Buffer);
+		MPU9150_DetectClick (&IMU_L_ClickDetection, IMU_L_Buffer);
 		
 		__HAL_GPIO_EXTI_CLEAR_IT (IMU_L_IRQ_PIN);
 	}
