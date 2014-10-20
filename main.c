@@ -69,12 +69,6 @@ I2C_HandleTypeDef          IMU_R_I2C_Handler;
 MPU9150_HandleTypeDef      IMU_L_Handler;
 MPU9150_HandleTypeDef      IMU_R_Handler;
 
-MPU9150_ClickTypeDef       IMU_L_ClickDetection;
-MPU9150_ClickTypeDef       IMU_R_ClickDetection;
-
-int16_t                    IMU_L_Buffer[3];
-int16_t                    IMU_R_Buffer[3];
-
 /* Private function prototypes -----------------------------------------------*/
 static void SystemClock_Config(void);
 
@@ -82,18 +76,14 @@ static void SystemClock_Config(void);
 
 void MIDI_Task_Callback (void const *args)
 {
-
-//	if(IMU_L_Detection.x.click)
-//		MIDI_SendMsg(0x99, 0x2C, IMU_L_Detection.x.vel);
-//	if(IMU_L_Detection.y.click)
-//		MIDI_SendMsg(0x99, 0x26, IMU_L_Detection.y.vel);
-	if(IMU_L_ClickDetection.z.click)
-		MIDI_SendMsg(0x99, 0x26, IMU_L_ClickDetection.z.vel);
+	if(IMU_L_Handler.Click.Z.Clicked)
+		MIDI_SendMsg(0x99, 0x26, IMU_L_Handler.Click.Z.Velocity);
 	
-	IMU_L_ClickDetection.x.click = 0;
-	IMU_L_ClickDetection.y.click = 0;
-	IMU_L_ClickDetection.z.click = 0;
-		
+	if(IMU_R_Handler.Click.Z.Clicked)
+		MIDI_SendMsg(0x99, 0x2A, IMU_R_Handler.Click.Z.Velocity);
+	
+	IMU_L_Handler.Click.Z.Clicked = 0;
+	IMU_R_Handler.Click.Z.Clicked = 0;	
 }
 
 osTimerDef (MIDI_Task, MIDI_Task_Callback);
@@ -159,7 +149,7 @@ int main(void)
 	IMU_L_Handler.I2Cx                        = &IMU_L_I2C_Handler;
 	IMU_L_Handler.Init.Clock_Source           = MPU9150_CLOCK_SRC_GYRO_X_AXIS;
 	IMU_L_Handler.Init.LowPass_Filter         = IMU_LP_FILTER;
-	IMU_L_Handler.Init.SampleRate_Divider     = IMU_SMPLRT(250);
+	IMU_L_Handler.Init.SampleRate_Divider     = IMU_SMPLRT(1000);
 	IMU_L_Handler.Init.Accel_FullScale_Range  = MPU9150_ACCEL_FULLSCALE_2;
 	IMU_L_Handler.Init.Gyro_FullScale_Range   = MPU9150_GYRO_FULLSCALE_2000;
 	IMU_L_Handler.IRQ.Mode                    = MPU9150_INTERRUPT_MODE_PUSH_PULL;
@@ -169,6 +159,8 @@ int main(void)
 	                                            MPU9150_FIFO_GYRO_X |
 	                                            MPU9150_FIFO_GYRO_Y |
 	                                            MPU9150_FIFO_GYRO_Z ;
+	IMU_L_Handler.Click.MaxForce              = IMU_MAX_FORCE;
+	IMU_L_Handler.Click.Threshold             = IMU_GYRO_THRESHOLD;
 	
 	MPU9150_Init (&IMU_L_Handler);
 #endif
@@ -215,6 +207,8 @@ int main(void)
 	                                            MPU9150_FIFO_GYRO_X |
 	                                            MPU9150_FIFO_GYRO_Y |
 	                                            MPU9150_FIFO_GYRO_Z ;
+	IMU_R_Handler.Click.MaxForce              = IMU_MAX_FORCE;
+	IMU_R_Handler.Click.Threshold             = IMU_GYRO_THRESHOLD;
 	
 	MPU9150_Init (&IMU_R_Handler);
 #endif
@@ -225,7 +219,7 @@ int main(void)
 
 #ifdef RTE_CMSIS_RTOS                   // when using CMSIS RTOS
 	tid = osTimerCreate (osTimer (MIDI_Task), osTimerPeriodic, NULL); 
-	osTimerStart (tid, 4);
+	osTimerStart (tid, 1);
 	
   osKernelStart ();                     // start thread execution 
 #else

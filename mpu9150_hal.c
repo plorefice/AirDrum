@@ -19,8 +19,6 @@
 #include <string.h>
     
 /* Private variables ---------------------------------------------------------*/
-static uint8_t wr_buf[MPU9150_MAX_WRITE + 1]; // Space for address
-
 /* Private Function Prototypes -----------------------------------------------*/
 static void MPU9150_I2C_ReadBuffer  (I2C_HandleTypeDef  *hi2c,
 	                                   uint8_t             dev_addr,
@@ -92,7 +90,7 @@ void MPU9150_Init (MPU9150_HandleTypeDef *hmpu)
 	MPU9150_Write (hmpu, MPU9150_INT_ENABLE_REG_ADDR, &ctrl, 1);
 	
 	/* Configure the Magnetometer */
-	MPU9150_Compass_Init (hmpu);
+//	MPU9150_Compass_Init (hmpu);
 }
 
 
@@ -107,6 +105,9 @@ void MPU9150_Read (MPU9150_HandleTypeDef  *hmpu,
                    uint8_t                *buf,
                    uint8_t                 len)
 {
+	if (len == 0)
+		return;	
+	
 	/* Receive buffer */
 	MPU9150_I2C_ReadBuffer (hmpu->I2Cx,
 	                        MPU9150_I2C_ADDR, 
@@ -127,12 +128,37 @@ void MPU9150_Write (MPU9150_HandleTypeDef  *hmpu,
                     uint8_t                *buf,
                     uint8_t                 len)
 {
+	uint8_t *tmp = (uint8_t *)(&(hmpu->Buffer[0]));
+	
+	if (len == 0 || len > MPU9150_MAX_XFER_SIZE)
+		return;
+	
+	tmp[0] = reg_addr;
+	memcpy (tmp, buf, len);
+	
 	/* Transmit buffer */
 	MPU9150_I2C_WriteBuffer (hmpu->I2Cx,
 	                         MPU9150_I2C_ADDR, 
 	                         reg_addr, 
-	                         buf,
-                           len);
+	                         tmp,
+                           len + 1);
+}
+
+
+void AK8975C_Read (MPU9150_HandleTypeDef  *hmpu,
+	                 uint8_t                 reg_addr,
+                   uint8_t                *buf,
+                   uint8_t                 len)
+{
+	if (len == 0)
+		return;	
+	
+	/* Receive buffer */
+	MPU9150_I2C_ReadBuffer (hmpu->I2Cx,
+	                        AK8975C_I2C_ADDR, 
+	                        reg_addr, 
+	                        buf,
+                          len);
 }
 
 
@@ -141,13 +167,13 @@ void MPU9150_Write (MPU9150_HandleTypeDef  *hmpu,
 	* @param  pBuffer: Pointer to a buffer of size int16_t[3].
   * @retval None
   */
-void MPU9150_ReadAccel (MPU9150_HandleTypeDef  *hmpu, int16_t *buf)
+void MPU9150_ReadAccel (MPU9150_HandleTypeDef *hmpu)
 {
-	MPU9150_Read (hmpu, MPU9150_ACCEL_XOUT_H_REG_ADDR, (uint8_t *)buf, 6);
+	MPU9150_Read (hmpu, MPU9150_ACCEL_XOUT_H_REG_ADDR, (uint8_t *)(hmpu->Buffer), 6);
 
-	buf[0] = (int16_t)(bswap16(buf[0]));
-	buf[1] = (int16_t)(bswap16(buf[1]));
-	buf[2] = (int16_t)(bswap16(buf[2]));
+	hmpu->Buffer[0] = (int16_t)(bswap16(hmpu->Buffer[0]));
+	hmpu->Buffer[1] = (int16_t)(bswap16(hmpu->Buffer[1]));
+	hmpu->Buffer[2] = (int16_t)(bswap16(hmpu->Buffer[2]));
 }
 
 
@@ -156,13 +182,13 @@ void MPU9150_ReadAccel (MPU9150_HandleTypeDef  *hmpu, int16_t *buf)
 	* @param  pBuffer: Pointer to a buffer of size int16_t[3].
   * @retval None
   */
-void MPU9150_ReadGyro (MPU9150_HandleTypeDef  *hmpu, int16_t *buf)
+void MPU9150_ReadGyro (MPU9150_HandleTypeDef *hmpu)
 {
-	MPU9150_Read (hmpu, MPU9150_GYRO_XOUT_H_REG_ADDR, (uint8_t *)buf, 6);
+	MPU9150_Read (hmpu, MPU9150_GYRO_XOUT_H_REG_ADDR, (uint8_t *)(hmpu->Buffer), 6);
 
-	buf[0] = (int16_t)(bswap16(buf[0]));
-	buf[1] = (int16_t)(bswap16(buf[1]));
-	buf[2] = (int16_t)(bswap16(buf[2]));
+	hmpu->Buffer[0] = (int16_t)(bswap16(hmpu->Buffer[0]));
+	hmpu->Buffer[1] = (int16_t)(bswap16(hmpu->Buffer[1]));
+	hmpu->Buffer[2] = (int16_t)(bswap16(hmpu->Buffer[2]));
 }
 
 
@@ -171,7 +197,7 @@ void MPU9150_ReadGyro (MPU9150_HandleTypeDef  *hmpu, int16_t *buf)
 	* @param  pBuffer: Pointer to a buffer of adequate size.
   * @retval Number of samples available in the FIFO.
   */
-uint16_t MPU9150_ReadFIFO (MPU9150_HandleTypeDef  *hmpu, int16_t *buf)
+uint16_t MPU9150_ReadFIFO (MPU9150_HandleTypeDef *hmpu)
 {
 	uint16_t nSamples;
 	uint16_t i;
@@ -179,78 +205,53 @@ uint16_t MPU9150_ReadFIFO (MPU9150_HandleTypeDef  *hmpu, int16_t *buf)
 	/* Read number of samples */
 	MPU9150_Read (hmpu, MPU9150_FIFO_COUNTH_REG_ADDR, (uint8_t *)&nSamples, 2);
 	nSamples = (uint16_t)(bswap16(nSamples));
+	
+	if (nSamples > MPU9150_MAX_XFER_SIZE)
+	{
+		Error_Handler();
+	}
 
 	/* Read data */
 	for (i = 0; i < (nSamples >> 1); i++)
 	{
-		uint8_t *buff = (uint8_t *)&buf[i];
+		uint8_t *buff = (uint8_t *)(&(hmpu->Buffer[i]));
 		
 		MPU9150_Read (hmpu, MPU9150_FIFO_R_W_REG_ADDR, buff++, 1);
 		MPU9150_Read (hmpu, MPU9150_FIFO_R_W_REG_ADDR, buff  , 1);
 		
-		buf[i] = (int16_t)(bswap16(buf[i]));
+		hmpu->Buffer[i] = (int16_t)(bswap16(hmpu->Buffer[i]));
 	}
 	
 	return nSamples;
 }
 
 
-void MPU9150_DetectClick (MPU9150_HandleTypeDef *hmpu, int16_t * buffer)
+void MPU9150_DetectClick (MPU9150_HandleTypeDef *hmpu)
 {
-	int16_t x = buffer[0];
-	int16_t y = buffer[1];
-	int16_t z = buffer[2];
+	MPU9150_ClickTypeDef *cs = &(hmpu->Click);
+	int16_t                z = hmpu->Buffer[2];
 	
-	/*
-	if(th_x){
-		if(x < TH) {
-			
-			if(max_x > MAX_FORCE)
-				max_x = MAX_FORCE;
-			IMU_ClickStruct->x.vel  = (max_x/MAX_FORCE) * 127;
-			IMU_ClickStruct->x.click = 1;
-			th_x = 0;
-			max_x = 0;
-		} else if(x > max_x) {
-			max_x = x;
-		}
-	} else if(x > TH){
-		max_x = x;
-		th_x = 1;
-	}
-	
-	if(th_y && y < TH){
-		
-		if(max_y > MAX_FORCE)
-			max_y = MAX_FORCE;
-		IMU_ClickStruct->y.vel = (max_y/MAX_FORCE) * 127;
-		IMU_ClickStruct->y.click = 1;
-		th_y = 0;
-	}
-	else if(y > TH){
-		max_y = y;
-		th_y = 1;
-	}
-	*/
-	
-	if(th_z)                                 // If I'm detecting a click
+	if(cs->Z.Clicking)                              // If I'm detecting a click
 	{
-		if (z >= th_z)                         // and I'm above the threshold
+		if (z >= cs->Threshold)                       // and I'm above the threshold
 		{ 
-			max_z = (z > max_z) ? z : max_z;     // update the maximum.
+			cs->Z.Force = (z > cs->Z.Force) ?           // update the maximum.
+			               z : cs->Z.Force;   
 		}
-		else {                                 // If I'm not above the threshold
-			IMU_ClickStruct->z.click = 1;        // a click has been detected
-			IMU_ClickStruct->z.vel = (uint8_t)   // and the velocity is calculated
-			  ((max_z / MAX_FORCE) * 127.0f);    // based on the strength.
-			th_z = 0;                            // Save everything and reset click
-			max_z = 0;                           // and maximum strength.
+		else                                          // If I'm not above the threshold
+		{                                
+			cs->Z.Clicked  = 1;                         // a click has been detected
+			cs->Z.Velocity = (uint8_t)                  // and the velocity is calculated
+			  ((cs->Z.Force / cs->MaxForce) * 127.0f);  // based on the strength.
+			
+			cs->Z.Clicking = 0;                         // Save everything and reset click
+			cs->Z.Force    = 0;                         // and maximum strength.
 		}
 	}
-	else if(z > TH)                          // If I have not started dectection,
+	else if(z > cs->Threshold)                      // If I have not started dectection,
 	{
-		max_z = z;                             // updated the maximum
-		th_z = 1;                              // and start detecting.
+		cs->Z.Force    = z;                           // updated the maximum
+		cs->Z.Clicking = 1;                           // and start detecting.
 	}
 }
 
@@ -268,14 +269,14 @@ static uint8_t MPU9150_Compass_Test (MPU9150_HandleTypeDef *hmpu)
 	
 	/* Enable direct access to AUX I2C bus inside MPU9150 from the Discovery */
 	Data = 0x02;
-	MPU9150_I2C_WriteBuffer (hmpu->I2Cx, MPU9150_I2C_ADDR, MPU9150_INT_PIN_CFG_REG_ADDR, &Data, 1);
+	MPU9150_Write (hmpu, MPU9150_INT_PIN_CFG_REG_ADDR, &Data, 1);
 	
 	/* Read WHO_AM_I register of AK8975C */
-	MPU9150_I2C_ReadBuffer (hmpu->I2Cx, AK8975C_I2C_ADDR, AK8975C_WIA_REG_ADDR, &WAI, 1);
+	AK8975C_Read  (hmpu, AK8975C_WIA_REG_ADDR, &WAI, 1);
 	
 	/* Disable direct access to AUX I2C bus */
 	Data = 0x00;
-	MPU9150_I2C_WriteBuffer (hmpu->I2Cx, MPU9150_I2C_ADDR, MPU9150_INT_PIN_CFG_REG_ADDR, &Data, 1);
+	MPU9150_Write (hmpu, MPU9150_INT_PIN_CFG_REG_ADDR, &Data, 1);
 	
 	/* Wrong DevID */
 	if (WAI != 0x48) return 1;
@@ -313,9 +314,6 @@ static void MPU9150_I2C_ReadBuffer (I2C_HandleTypeDef  *hi2c,
                                     uint8_t            *buf,
                                     uint8_t             len)
 {
-	if (len == 0)
-		return;	
-	
 	while (HAL_I2C_GetState (hi2c) == HAL_I2C_STATE_BUSY) ;
 	
 	HAL_I2C_Master_Transmit (hi2c, dev_addr, &reg_addr, 1, 1000);	
@@ -338,13 +336,7 @@ static void MPU9150_I2C_WriteBuffer (I2C_HandleTypeDef  *hi2c,
                                      uint8_t            *buf,
                                      uint8_t             len)
 {
-	if (len == 0 || len > MPU9150_MAX_WRITE)
-		return;
-	
-	wr_buf[0] = reg_addr;
-	memcpy (wr_buf + 1, buf, len);
-	
-	HAL_I2C_Master_Transmit (hi2c, dev_addr, wr_buf, len + 1, 1000);
+	HAL_I2C_Master_Transmit (hi2c, dev_addr, buf, len, 1000);
 }
 
 

@@ -48,6 +48,9 @@
 #define IMU_L
 //#define IMU_R
 
+#define IMU_GYRO_THRESHOLD                 0x07FF
+#define IMU_MAX_FORCE                      32767.0f
+
 /* Left IMU configuration */
 #define IMU_L_I2C                          I2C1
 #define IMU_L_I2C_ENABLE                   __I2C1_CLK_ENABLE
@@ -91,7 +94,7 @@
 #define IMU_R_IRQ_Handler                  EXTI9_5_IRQHandler
 
 /* Common IMU configuration */
-#define IMU_LP_FILTER                      MPU9150_LOWPASSFILTER_3
+#define IMU_LP_FILTER                      MPU9150_LOWPASSFILTER_1
 
 /* USB configuration */
 #define USB_Device                         0
@@ -126,12 +129,6 @@ extern I2C_HandleTypeDef                   IMU_R_I2C_Handler;
 
 extern MPU9150_HandleTypeDef               IMU_L_Handler;
 extern MPU9150_HandleTypeDef               IMU_R_Handler;
-
-extern MPU9150_ClickTypeDef                IMU_L_ClickDetection;
-extern MPU9150_ClickTypeDef                IMU_R_ClickDetection;
-
-extern int16_t                             IMU_L_Buffer[3];
-extern int16_t                             IMU_R_Buffer[3];
 
 /* Exported functions ------------------------------------------------------- */
 void Error_Handler(void);

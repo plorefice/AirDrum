@@ -22,10 +22,17 @@ extern "C" {
 #endif
     
 /* Includes ------------------------------------------------------------------*/
-
-/* Exported constants --------------------------------------------------------*/
 #include "stm32f4xx_hal.h"
 	
+/* Exported constants --------------------------------------------------------*/
+
+/* Max write length (in bytes) */
+#define MPU9150_MAX_XFER_SIZE                                      20
+
+	/* I2C Addresses */
+#define MPU9150_I2C_ADDR                                         ((0x69)<<1)
+#define AK8975C_I2C_ADDR                                         ((0x0C)<<1)
+
 /* Exported types ------------------------------------------------------------*/
 	
 /* MPU9150 Base config. */
@@ -49,17 +56,19 @@ typedef struct
 
 typedef struct
 {
-	uint8_t	Click;
-	uint8_t Threshold;
-	uint8_t Force;
+	uint8_t Clicking;
+	uint8_t	Clicked;
+	int16_t Force;
 	uint8_t Velocity;
 } MPU9150_Axis;
 
 typedef struct
 {
-	Axis X;
-	Axis Y;
-	Axis Z;
+	MPU9150_Axis  X;
+	MPU9150_Axis  Y;
+	MPU9150_Axis  Z;
+	int16_t       MaxForce;
+	int16_t       Threshold;
 } MPU9150_ClickTypeDef;
 
 /* MPU9150 Handle */
@@ -69,6 +78,7 @@ typedef struct
 	MPU9150_InitTypeDef   Init;
 	MPU9150_IRQTypeDef    IRQ;
 	MPU9150_ClickTypeDef  Click;
+	int16_t               Buffer[MPU9150_MAX_XFER_SIZE];
 } MPU9150_HandleTypeDef;
 
 /* MPU9150 click detection */
@@ -79,16 +89,6 @@ typedef struct
 #define bswap16(X)                (((X & 0xFF00) >> 8) | ((X & 0x00FF) << 8))
 
 /* Exported constants --------------------------------------------------------*/
-
-#define TH                                                        0x07FF
-#define MAX_FORCE                                                 32767.0f
-
-/* Max write length (in bytes) */
-#define MPU9150_MAX_WRITE                                          0x10
-
-/* I2C Addresses */
-#define MPU9150_I2C_ADDR                                         ((0x69)<<1)
-#define AK8975C_I2C_ADDR                                         ((0x0C)<<1)
 
 /******************************************************************************/
 /*************************** START REGISTER MAPPING  **************************/
@@ -272,18 +272,18 @@ typedef struct
 #define MPU9150_CLOCK_SRC_EXT_19_2_MHZ                    ((uint8_t)0x05)
 #define MPU9150_CLOCK_SRC_RESET                           ((uint8_t)0x07)
 
-
 /* Exported functions --------------------------------------------------------*/
 	
 void     MPU9150_Init  (MPU9150_HandleTypeDef *hmpu);
 void     MPU9150_Read  (MPU9150_HandleTypeDef *hmpu, uint8_t reg_addr, uint8_t *buf, uint8_t len);
 void     MPU9150_Write (MPU9150_HandleTypeDef *hmpu, uint8_t reg_addr, uint8_t *buf, uint8_t len);
+void     AK8975C_Read  (MPU9150_HandleTypeDef *hmpu, uint8_t reg_addr, uint8_t *buf, uint8_t len);
 
-void     MPU9150_ReadAccel   (MPU9150_HandleTypeDef *hmpu, int16_t *pBuffer);
-void     MPU9150_ReadGyro    (MPU9150_HandleTypeDef *hmpu, int16_t *pBuffer);
-uint16_t MPU9150_ReadFIFO    (MPU9150_HandleTypeDef *hmpu, int16_t *pBuffer);
+void     MPU9150_ReadAccel   (MPU9150_HandleTypeDef *hmpu);
+void     MPU9150_ReadGyro    (MPU9150_HandleTypeDef *hmpu);
+uint16_t MPU9150_ReadFIFO    (MPU9150_HandleTypeDef *hmpu);
 
-void     MPU9150_DetectClick (MPU9150_HandleTypeDef *hmpu, int16_t * buffer);
+void     MPU9150_DetectClick (MPU9150_HandleTypeDef *hmpu);
 
 #ifdef __cplusplus
 }

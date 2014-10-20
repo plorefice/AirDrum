@@ -193,8 +193,8 @@ void IMU_L_IRQ_Handler (void)
 	{
 		HAL_GPIO_TogglePin (LED_IRQ_L_PORT, LED_IRQ_L_PIN);
 		
-		MPU9150_ReadGyro    (&IMU_L_Handler, IMU_L_Buffer);
-		MPU9150_DetectClick (&IMU_L_ClickDetection, IMU_L_Buffer);
+		MPU9150_ReadGyro    (&IMU_L_Handler);
+		MPU9150_DetectClick (&IMU_L_Handler);
 		
 		__HAL_GPIO_EXTI_CLEAR_IT (IMU_L_IRQ_PIN);
 	}
@@ -208,6 +208,8 @@ void IMU_R_IRQ_Handler (void)
 	{
 		HAL_GPIO_TogglePin (LED_IRQ_R_PORT, LED_IRQ_R_PIN);
 		
+		MPU9150_ReadGyro    (&IMU_R_Handler);
+		MPU9150_DetectClick (&IMU_R_Handler);
 		
 		__HAL_GPIO_EXTI_CLEAR_IT (IMU_R_IRQ_PIN);
 	}
