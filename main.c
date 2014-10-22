@@ -197,7 +197,7 @@ int main(void)
 	IMU_R_Handler.I2Cx                        = &IMU_R_I2C_Handler;
 	IMU_R_Handler.Init.Clock_Source           = MPU9150_CLOCK_SRC_GYRO_X_AXIS;
 	IMU_R_Handler.Init.LowPass_Filter         = IMU_LP_FILTER;
-	IMU_R_Handler.Init.SampleRate_Divider     = IMU_SMPLRT(250);
+	IMU_R_Handler.Init.SampleRate_Divider     = IMU_SMPLRT(1000);
 	IMU_R_Handler.Init.Accel_FullScale_Range  = MPU9150_ACCEL_FULLSCALE_2;
 	IMU_R_Handler.Init.Gyro_FullScale_Range   = MPU9150_GYRO_FULLSCALE_2000;
 	IMU_R_Handler.IRQ.Mode                    = MPU9150_INTERRUPT_MODE_PUSH_PULL;

@@ -48,9 +48,17 @@ void MPU9150_Init (MPU9150_HandleTypeDef *hmpu)
 {
 	uint8_t ctrl = 0x00;
 	
+	/* Reset the device */
+	ctrl = 0x80;
+	MPU9150_Write (hmpu, MPU9150_PWR_MGMT_1_REG_ADDR, &ctrl, 1);
+	
+	HAL_Delay(50);
+	
 	/* Set MPU9150 Clock Source and power on the device */
 	ctrl = (uint8_t)(hmpu->Init.Clock_Source);
 	MPU9150_Write (hmpu, MPU9150_PWR_MGMT_1_REG_ADDR, &ctrl, 1);
+	
+	HAL_Delay(50);
 	
 	/* Configure the Sample Rate Divider */
 	ctrl = (uint8_t)(hmpu->Init.SampleRate_Divider);
@@ -82,7 +90,8 @@ void MPU9150_Init (MPU9150_HandleTypeDef *hmpu)
 	/* Enable interrupts */
 	ctrl = (uint8_t)(hmpu->IRQ.Level   |
 	                 hmpu->IRQ.Mode    |
-	                 hmpu->IRQ.Latched);
+	                 hmpu->IRQ.Latched |
+									 0x10              );
 	MPU9150_Write (hmpu, MPU9150_INT_PIN_CFG_REG_ADDR, &ctrl, 1);
 	
 	/* Enable DRDY interrupt */
@@ -134,7 +143,7 @@ void MPU9150_Write (MPU9150_HandleTypeDef  *hmpu,
 		return;
 	
 	tmp[0] = reg_addr;
-	memcpy (tmp, buf, len);
+	memcpy (tmp + 1, buf, len);
 	
 	/* Transmit buffer */
 	MPU9150_I2C_WriteBuffer (hmpu->I2Cx,
@@ -242,7 +251,7 @@ void MPU9150_DetectClick (MPU9150_HandleTypeDef *hmpu)
 		{                                
 			cs->Z.Clicked  = 1;                         // a click has been detected
 			cs->Z.Velocity = (uint8_t)                  // and the velocity is calculated
-			  ((cs->Z.Force / cs->MaxForce) * 127.0f);  // based on the strength.
+			  ((cs->Z.Force / (float)(cs->MaxForce)) * 127.0f);  // based on the strength.
 			
 			cs->Z.Clicking = 0;                         // Save everything and reset click
 			cs->Z.Force    = 0;                         // and maximum strength.
@@ -336,6 +345,8 @@ static void MPU9150_I2C_WriteBuffer (I2C_HandleTypeDef  *hi2c,
                                      uint8_t            *buf,
                                      uint8_t             len)
 {
+	while (HAL_I2C_GetState (hi2c) == HAL_I2C_STATE_BUSY) ;
+	
 	HAL_I2C_Master_Transmit (hi2c, dev_addr, buf, len, 1000);
 }
 
