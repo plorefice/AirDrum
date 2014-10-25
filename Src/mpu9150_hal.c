@@ -99,7 +99,7 @@ void MPU9150_Init (MPU9150_HandleTypeDef *hmpu)
   MPU9150_Write (hmpu, MPU9150_INT_ENABLE_REG_ADDR, &ctrl, 1);
   
   /* Configure the Magnetometer */
-//  MPU9150_Compass_Init (hmpu);
+  MPU9150_Compass_Init (hmpu);
 }
 
 

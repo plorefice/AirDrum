@@ -251,7 +251,7 @@ static void MX_IMU_Init (void)
   MPU9150_Init (&IMU_L_Handler);
 #endif
 	
-#ifdef IMU_R_I2C
+#ifdef IMU_R
   /* IMU initialization */
   IMU_R_Handler.I2Cx                        = &IMU_R_I2C_Handler;
   IMU_R_Handler.Init.Clock_Source           = MPU9150_CLOCK_SRC_GYRO_X_AXIS;
