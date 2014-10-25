@@ -48,7 +48,9 @@ Projects/EWARM/STM32F407VGT6
 Projects/EWARM/settings
 Projects/MDK-ARM/STM32F407VGT6 Configuration
 
-
 # Personal project files
 *.uvguix.*
 *.lst
+
+# Book folder
+Books/

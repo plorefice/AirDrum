@@ -29,9 +29,19 @@ extern "C" {
 /* Max write length (in bytes) */
 #define MPU9150_MAX_XFER_SIZE                                      20
 
-	/* I2C Addresses */
+/* I2C Addresses */
 #define MPU9150_I2C_ADDR                                         ((0x69)<<1)
 #define AK8975C_I2C_ADDR                                         ((0x0C)<<1)
+	
+/* Internal buffer data position */
+#define MPU9150_BUFF_ACCEL_X                                       0x00
+#define MPU9150_BUFF_ACCEL_Y                                       0x01
+#define MPU9150_BUFF_ACCEL_Z                                       0x02
+#define MPU9150_BUFF_TEMP                                          0x03
+#define MPU9150_BUFF_GYRO_X                                        0x04
+#define MPU9150_BUFF_GYRO_Y                                        0x05
+#define MPU9150_BUFF_GYRO_Z                                        0x06
+#define MPU9150_BUFF_EXT_SENS                                      0x07
 
 /* Exported types ------------------------------------------------------------*/
 	

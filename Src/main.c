@@ -285,7 +285,9 @@ static void MIDI_Thread(void const * argument)
 		{
 			IMU_L_Handler.DataRdy = 0;
 			
+			MPU9150_ReadAccel   (&IMU_L_Handler);
 			MPU9150_ReadGyro    (&IMU_L_Handler);
+			
 			MPU9150_DetectClick (&IMU_L_Handler);
 			
 			if(IMU_L_Handler.Click.Z.Clicked)

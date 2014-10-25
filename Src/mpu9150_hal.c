@@ -178,11 +178,12 @@ void AK8975C_Read (MPU9150_HandleTypeDef  *hmpu,
   */
 void MPU9150_ReadAccel (MPU9150_HandleTypeDef *hmpu)
 {
-  MPU9150_Read (hmpu, MPU9150_ACCEL_XOUT_H_REG_ADDR, (uint8_t *)(hmpu->Buffer), 6);
+  MPU9150_Read (hmpu, MPU9150_ACCEL_XOUT_H_REG_ADDR,
+               (uint8_t *)(&hmpu->Buffer[MPU9150_BUFF_ACCEL_X]), 6);
 
-  hmpu->Buffer[0] = (int16_t)(bswap16(hmpu->Buffer[0]));
-  hmpu->Buffer[1] = (int16_t)(bswap16(hmpu->Buffer[1]));
-  hmpu->Buffer[2] = (int16_t)(bswap16(hmpu->Buffer[2]));
+  hmpu->Buffer[MPU9150_BUFF_ACCEL_X] = (int16_t)(bswap16(hmpu->Buffer[MPU9150_BUFF_ACCEL_X]));
+  hmpu->Buffer[MPU9150_BUFF_ACCEL_Y] = (int16_t)(bswap16(hmpu->Buffer[MPU9150_BUFF_ACCEL_Y]));
+  hmpu->Buffer[MPU9150_BUFF_ACCEL_Z] = (int16_t)(bswap16(hmpu->Buffer[MPU9150_BUFF_ACCEL_Z]));
 }
 
 
@@ -193,11 +194,12 @@ void MPU9150_ReadAccel (MPU9150_HandleTypeDef *hmpu)
   */
 void MPU9150_ReadGyro (MPU9150_HandleTypeDef *hmpu)
 {
-  MPU9150_Read (hmpu, MPU9150_GYRO_XOUT_H_REG_ADDR, (uint8_t *)(hmpu->Buffer), 6);
+  MPU9150_Read (hmpu, MPU9150_GYRO_XOUT_H_REG_ADDR,
+	             (uint8_t *)(&hmpu->Buffer[MPU9150_BUFF_GYRO_X]), 6);
 
-  hmpu->Buffer[0] = (int16_t)(bswap16(hmpu->Buffer[0]));
-  hmpu->Buffer[1] = (int16_t)(bswap16(hmpu->Buffer[1]));
-  hmpu->Buffer[2] = (int16_t)(bswap16(hmpu->Buffer[2]));
+  hmpu->Buffer[MPU9150_BUFF_GYRO_X] = (int16_t)(bswap16(hmpu->Buffer[MPU9150_BUFF_GYRO_X]));
+  hmpu->Buffer[MPU9150_BUFF_GYRO_Y] = (int16_t)(bswap16(hmpu->Buffer[MPU9150_BUFF_GYRO_Y]));
+  hmpu->Buffer[MPU9150_BUFF_GYRO_Z] = (int16_t)(bswap16(hmpu->Buffer[MPU9150_BUFF_GYRO_Z]));
 }
 
 
@@ -238,7 +240,7 @@ uint16_t MPU9150_ReadFIFO (MPU9150_HandleTypeDef *hmpu)
 void MPU9150_DetectClick (MPU9150_HandleTypeDef *hmpu)
 {
   MPU9150_ClickTypeDef *cs = &(hmpu->Click);
-  int16_t                z = hmpu->Buffer[2];
+  int16_t                z = hmpu->Buffer[MPU9150_BUFF_GYRO_Z];
   
   if(cs->Z.Clicking)                              // If I'm detecting a click
   {
