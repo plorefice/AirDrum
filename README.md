@@ -1,6 +1,6 @@
-AirDrum_HAL
+AirDrum
 ===========
 
-Virtual drum kit developed using an STM32F4DISCOVERY board and two MPU9150 9DoF IMUs as motion sensors. 
+Virtual drumset developed using an STM32F4DISCOVERY board and two MPU9150 9DoF IMUs as motion sensors. 
 
-This version of the software is based on the new STM32F4 HAL drivers.
+Based on STM32 HAL drivers, USB drivers and FreeRTOS as operating system.
