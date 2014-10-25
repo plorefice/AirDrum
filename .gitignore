@@ -44,8 +44,11 @@ Temporary Items
 .apdisk
 
 # Compilation output
-Listings/
-Objects/
+Projects/EWARM/STM32F407VGT6
+Projects/EWARM/settings
+Projects/MDK-ARM/STM32F407VGT6 Configuration
+
 
 # Personal project files
 *.uvguix.*
+*.lst
