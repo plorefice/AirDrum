@@ -49,8 +49,6 @@ void HAL_I2C_MspInit (I2C_HandleTypeDef *hi2c)
   
   if (hi2c->Instance == IMU_L_I2C)
   {
-    IMU_L_I2C_ENABLE ();
-    
     IMU_L_I2C_SCL_ENABLE ();
     IMU_L_I2C_SDA_ENABLE ();
     
@@ -63,11 +61,11 @@ void HAL_I2C_MspInit (I2C_HandleTypeDef *hi2c)
     
     GPIO_InitStruct.Pin        = IMU_L_I2C_SDA_PIN;
     HAL_GPIO_Init (IMU_L_I2C_SDA_PORT, &GPIO_InitStruct);
+		
+    IMU_L_I2C_ENABLE ();
   }
   else if (hi2c->Instance == IMU_R_I2C)
   {
-    IMU_R_I2C_ENABLE ();
-    
     IMU_R_I2C_SCL_ENABLE ();
     IMU_R_I2C_SDA_ENABLE ();
     
@@ -80,6 +78,8 @@ void HAL_I2C_MspInit (I2C_HandleTypeDef *hi2c)
     
     GPIO_InitStruct.Pin        = IMU_R_I2C_SDA_PIN;
     HAL_GPIO_Init (IMU_R_I2C_SDA_PORT, &GPIO_InitStruct);		
+		
+    IMU_R_I2C_ENABLE ();
   }
 }
 

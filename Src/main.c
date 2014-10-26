@@ -38,6 +38,8 @@
 #include "usb_device.h"
 #include "stm32f4xx_it.h"
 
+#include "inv_gyro.h"
+#include "inv_gyro_dmp_android.h"
 #include "mpu9150_hal.h"
 #include "midi.h"
 
@@ -65,17 +67,18 @@ int main(void)
 
   /* Configure the system clock */
   SystemClock_Config();
+	SystemCoreClockUpdate();
 
   /* System interrupt init*/
   /* Sets the priority grouping field */
   HAL_NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_4);
-  HAL_NVIC_SetPriority(SysTick_IRQn, 0, 0);
+	HAL_InitTick(0);
   
   /* Initialize all configured peripherals */
   MX_I2C_Init ();
   MX_GPIO_Init ();
 	MX_IMU_Init ();
-
+	
   /* Code generated for FreeRTOS */
   /* Create Start thread */
   osThreadDef(MIDI_Thread, MIDI_Thread, osPriorityNormal, 0, configMINIMAL_STACK_SIZE);
@@ -202,7 +205,7 @@ void MX_I2C_Init (void)
   
   /* I2C configuration */
   I2C_InitStruct.ClockSpeed       = 400000;
-  I2C_InitStruct.DutyCycle        = I2C_DUTYCYCLE_2;
+  I2C_InitStruct.DutyCycle        = I2C_DUTYCYCLE_16_9;
   I2C_InitStruct.AddressingMode   = I2C_ADDRESSINGMODE_7BIT;
   I2C_InitStruct.DualAddressMode  = I2C_DUALADDRESS_DISABLED;
   I2C_InitStruct.NoStretchMode    = I2C_NOSTRETCH_DISABLED;
@@ -276,35 +279,46 @@ static void MX_IMU_Init (void)
 
 static void MIDI_Thread(void const * argument)
 {
+	uint32_t prevWakeTime;
+	
   /* init code for USB_DEVICE */
   MX_USB_DEVICE_Init();
+		
+	prevWakeTime = osKernelSysTick ();
 
   for(;;)
-  {    
-		if (IMU_L_Handler.DataRdy)
+  {
+		MPU9150_ReadAccel   (&IMU_L_Handler);
+		MPU9150_ReadGyro    (&IMU_L_Handler);
+			
+		MPU9150_DetectClick (&IMU_L_Handler);
+			
+		if(IMU_L_Handler.Click.Z.Clicked)
 		{
-			IMU_L_Handler.DataRdy = 0;
-			
-			MPU9150_ReadAccel   (&IMU_L_Handler);
-			MPU9150_ReadGyro    (&IMU_L_Handler);
-			
-			MPU9150_DetectClick (&IMU_L_Handler);
-			
-			if(IMU_L_Handler.Click.Z.Clicked)
+			if (IMU_L_Handler.Buffer[MPU9150_BUFF_ACCEL_Y] > 0x2000)
 			{
 				MIDI_SendMsg(0x99, 0x26, IMU_L_Handler.Click.Z.Velocity);
-				HAL_GPIO_TogglePin(LED_MIDI_PORT, LED_MIDI_PIN);
+			}
+			else
+			{
+				MIDI_SendMsg(0x99, 0x31, IMU_L_Handler.Click.Z.Velocity);
 			}
 			
+			HAL_GPIO_TogglePin(LED_MIDI_PORT, LED_MIDI_PIN);
+			
 			IMU_L_Handler.Click.Z.Clicked = 0;
-    }
+		}
 			
     if(IMU_R_Handler.Click.Z.Clicked)
-            MIDI_SendMsg(0x99, 0x2A, IMU_R_Handler.Click.Z.Velocity);
+		{
+			MIDI_SendMsg(0x99, 0x2A, IMU_R_Handler.Click.Z.Velocity);
+			HAL_GPIO_TogglePin(LED_MIDI_PORT, LED_MIDI_PIN);
+			
+			IMU_R_Handler.Click.Z.Clicked = 0;	
+		}
     
-    IMU_R_Handler.Click.Z.Clicked = 0;	
-    
-    osDelay(3);
+    osDelayUntil(prevWakeTime, 2);
+		prevWakeTime = osKernelSysTick ();
   }
 }
 

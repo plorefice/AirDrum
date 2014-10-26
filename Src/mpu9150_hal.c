@@ -75,7 +75,7 @@ void MPU9150_Init (MPU9150_HandleTypeDef *hmpu)
   /* Configure the Accelerometer */
   ctrl = (uint8_t)(hmpu->Init.Accel_FullScale_Range);
   MPU9150_Write (hmpu, MPU9150_ACCEL_CONFIG_REG_ADDR, &ctrl, 1);
-  
+
   /* Configure FIFO sources */
   ctrl = (uint8_t)(hmpu->IRQ.Sources);
   MPU9150_Write (hmpu, MPU9150_FIFO_EN_REG_ADDR, &ctrl, 1);
@@ -305,7 +305,7 @@ static void MPU9150_Compass_Init (MPU9150_HandleTypeDef *hmpu)
   /* Perform preliminary compass test */
   if (0x0 != MPU9150_Compass_Test (hmpu))
   {
-          Error_Handler ();
+		Error_Handler ();
   }
 }
 
@@ -325,10 +325,10 @@ static void MPU9150_I2C_ReadBuffer (I2C_HandleTypeDef  *hi2c,
                                     uint8_t            *buf,
                                     uint8_t             len)
 {
-  while (HAL_I2C_GetState (hi2c) == HAL_I2C_STATE_BUSY) ;
+  while (__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_BUSY) == SET) ;
 
-  HAL_I2C_Master_Transmit (hi2c, dev_addr, &reg_addr, 1, 2);	
-  HAL_I2C_Master_Receive  (hi2c, dev_addr, buf, len, 2);
+  HAL_I2C_Master_Transmit (hi2c, dev_addr, &reg_addr, 1, 5);
+  HAL_I2C_Master_Receive  (hi2c, dev_addr, buf, len, 5);
 }
 
 
@@ -347,9 +347,9 @@ static void MPU9150_I2C_WriteBuffer (I2C_HandleTypeDef  *hi2c,
                                      uint8_t            *buf,
                                      uint8_t             len)
 {
-  while (HAL_I2C_GetState (hi2c) == HAL_I2C_STATE_BUSY) ;
+  while (__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_BUSY) == SET) ;
 
-  HAL_I2C_Master_Transmit (hi2c, dev_addr, buf, len, 2);
+  HAL_I2C_Master_Transmit (hi2c, dev_addr, buf, len, 5);
 }
 
 

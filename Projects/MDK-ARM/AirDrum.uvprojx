@@ -363,9 +363,9 @@
             <useXO>0</useXO>
             <VariousControls>
               <MiscControls>--C99</MiscControls>
-              <Define>USE_HAL_DRIVER,STM32F407xx</Define>
+              <Define>USE_HAL_DRIVER,STM32F407xx,HSE_VALUE=8000000,MPU9150,USE_DMP</Define>
               <Undefine></Undefine>
-              <IncludePath>..\..\Inc;..\..\Drivers\STM32F4xx_HAL_Driver\Inc;..\..\Middlewares\Third_Party\FreeRTOS\Source\portable\RVDS\ARM_CM4F;..\..\Middlewares\ST\STM32_USB_Device_Library\Core\Inc;..\..\Middlewares\ST\STM32_USB_Device_Library\Class\AUDIO\Inc;..\..\Middlewares\Third_Party\FreeRTOS\Source\include;..\..\Middlewares\Third_Party\FreeRTOS\Source\CMSIS_RTOS;..\..\Drivers\CMSIS\Include;..\..\Drivers\CMSIS\Device\ST\STM32F4xx\Include</IncludePath>
+              <IncludePath>..\..\Inc;..\..\Drivers\STM32F4xx_HAL_Driver\Inc;..\..\Middlewares\Third_Party\FreeRTOS\Source\portable\RVDS\ARM_CM4F;..\..\Middlewares\ST\STM32_USB_Device_Library\Core\Inc;..\..\Middlewares\ST\STM32_USB_Device_Library\Class\AUDIO\Inc;..\..\Middlewares\Third_Party\FreeRTOS\Source\include;..\..\Middlewares\Third_Party\FreeRTOS\Source\CMSIS_RTOS;..\..\Drivers\CMSIS\Include;..\..\Drivers\CMSIS\Device\ST\STM32F4xx\Include;..\..\Drivers\eMPL</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -452,6 +452,11 @@
               <FileName>mpu9150_hal.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\Src\mpu9150_hal.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f4xx_empl_drv.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\Src\stm32f4xx_empl_drv.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -572,6 +577,21 @@
               <FileName>stm32f4xx_hal_i2c_ex.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_i2c_ex.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>Drivers/eMPL</GroupName>
+          <Files>
+            <File>
+              <FileName>inv_gyro.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\Drivers\eMPL\inv_gyro.c</FilePath>
+            </File>
+            <File>
+              <FileName>inv_gyro_dmp_android.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\Drivers\eMPL\inv_gyro_dmp_android.c</FilePath>
             </File>
           </Files>
         </Group>
