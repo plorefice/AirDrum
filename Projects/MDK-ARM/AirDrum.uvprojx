@@ -171,11 +171,11 @@
             <RunIndependent>0</RunIndependent>
             <UpdateFlashBeforeDebugging>1</UpdateFlashBeforeDebugging>
             <Capability>1</Capability>
-            <DriverSelection>4107</DriverSelection>
+            <DriverSelection>4096</DriverSelection>
           </Flash1>
           <bUseTDR>1</bUseTDR>
           <Flash2>BIN\UL2CM3.DLL</Flash2>
-          <Flash3></Flash3>
+          <Flash3>"" ()</Flash3>
           <Flash4></Flash4>
           <pFcarmOut></pFcarmOut>
           <pFcarmGrp></pFcarmGrp>
@@ -362,10 +362,10 @@
             <uC99>0</uC99>
             <useXO>0</useXO>
             <VariousControls>
-              <MiscControls>--C99</MiscControls>
-              <Define>USE_HAL_DRIVER,STM32F407xx,HSE_VALUE=8000000,MPU9150,USE_DMP</Define>
+              <MiscControls>--C99 --wchar32</MiscControls>
+              <Define>USE_HAL_DRIVER,STM32F407xx,HSE_VALUE=8000000,MPU9150,USE_DMP,MPL_LOG_NDEBUG=1,EMPL,EMPL_TARGET_STM32F4</Define>
               <Undefine></Undefine>
-              <IncludePath>..\..\Inc;..\..\Drivers\STM32F4xx_HAL_Driver\Inc;..\..\Middlewares\Third_Party\FreeRTOS\Source\portable\RVDS\ARM_CM4F;..\..\Middlewares\ST\STM32_USB_Device_Library\Core\Inc;..\..\Middlewares\ST\STM32_USB_Device_Library\Class\AUDIO\Inc;..\..\Middlewares\Third_Party\FreeRTOS\Source\include;..\..\Middlewares\Third_Party\FreeRTOS\Source\CMSIS_RTOS;..\..\Drivers\CMSIS\Include;..\..\Drivers\CMSIS\Device\ST\STM32F4xx\Include;..\..\Drivers\eMPL</IncludePath>
+              <IncludePath>..\..\Inc;..\..\Drivers\STM32F4xx_HAL_Driver\Inc;..\..\Middlewares\Third_Party\FreeRTOS\Source\portable\RVDS\ARM_CM4F;..\..\Middlewares\ST\STM32_USB_Device_Library\Core\Inc;..\..\Middlewares\ST\STM32_USB_Device_Library\Class\AUDIO\Inc;..\..\Middlewares\Third_Party\FreeRTOS\Source\include;..\..\Middlewares\Third_Party\FreeRTOS\Source\CMSIS_RTOS;..\..\Drivers\CMSIS\Include;..\..\Drivers\CMSIS\Device\ST\STM32F4xx\Include;..\..\Drivers\eMPL\driver\eMPL;..\..\Drivers\eMPL\driver\include;..\..\Drivers\eMPL\driver\STM32F4;..\..\Drivers\eMPL\eMPL-hal;..\..\Drivers\eMPL\mllite;..\..\Drivers\eMPL\mpl</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -584,14 +584,74 @@
           <GroupName>Drivers/eMPL</GroupName>
           <Files>
             <File>
-              <FileName>inv_gyro.c</FileName>
+              <FileName>inv_mpu.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\..\Drivers\eMPL\inv_gyro.c</FilePath>
+              <FilePath>..\..\Drivers\eMPL\driver\eMPL\inv_mpu.c</FilePath>
             </File>
             <File>
-              <FileName>inv_gyro_dmp_android.c</FileName>
+              <FileName>inv_mpu_dmp_motion_driver.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\..\Drivers\eMPL\inv_gyro_dmp_android.c</FilePath>
+              <FilePath>..\..\Drivers\eMPL\driver\eMPL\inv_mpu_dmp_motion_driver.c</FilePath>
+            </File>
+            <File>
+              <FileName>log_stm32.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\Drivers\eMPL\driver\STM32F4\log_stm32.c</FilePath>
+            </File>
+            <File>
+              <FileName>eMPL_outputs.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\Drivers\eMPL\eMPL-hal\eMPL_outputs.c</FilePath>
+            </File>
+            <File>
+              <FileName>data_builder.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\Drivers\eMPL\mllite\data_builder.c</FilePath>
+            </File>
+            <File>
+              <FileName>hal_outputs.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\Drivers\eMPL\mllite\hal_outputs.c</FilePath>
+            </File>
+            <File>
+              <FileName>message_layer.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\Drivers\eMPL\mllite\message_layer.c</FilePath>
+            </File>
+            <File>
+              <FileName>ml_math_func.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\Drivers\eMPL\mllite\ml_math_func.c</FilePath>
+            </File>
+            <File>
+              <FileName>mlmath.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\Drivers\eMPL\mllite\mlmath.c</FilePath>
+            </File>
+            <File>
+              <FileName>mpl.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\Drivers\eMPL\mllite\mpl.c</FilePath>
+            </File>
+            <File>
+              <FileName>results_holder.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\Drivers\eMPL\mllite\results_holder.c</FilePath>
+            </File>
+            <File>
+              <FileName>start_manager.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\Drivers\eMPL\mllite\start_manager.c</FilePath>
+            </File>
+            <File>
+              <FileName>storage_manager.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\Drivers\eMPL\mllite\storage_manager.c</FilePath>
+            </File>
+            <File>
+              <FileName>libmpllib.a</FileName>
+              <FileType>4</FileType>
+              <FilePath>..\..\Drivers\eMPL\mpl\libmpllib.a</FilePath>
             </File>
           </Files>
         </Group>

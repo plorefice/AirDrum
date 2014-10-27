@@ -44,7 +44,77 @@
 #include "mpu9150_hal.h"
 
 /* Exported types ------------------------------------------------------------*/
+
+typedef struct
+{
+	unsigned char header[3];
+	unsigned char cmd;
+} rx_s ;
+
+typedef struct
+{
+     unsigned char  lp_accel_mode;
+     unsigned char  sensors;
+     unsigned char  dmp_on;
+     unsigned char  wait_for_tap;
+     unsigned char  motion_int_mode;
+     unsigned long  no_dmp_hz;
+     unsigned long  next_pedo_ms;
+     unsigned long  next_temp_ms;
+     unsigned long  next_compass_ms;
+     unsigned int   report;
+     unsigned short dmp_features;
+__IO unsigned char  new_gyro;
+	            rx_s  rx;
+} hal_s;
+
+typedef struct
+{
+	signed char orientation[9];
+} platform_data_s;
+
+enum packet_type_e
+{
+	PACKET_TYPE_ACCEL,
+	PACKET_TYPE_GYRO,
+	PACKET_TYPE_QUAT,
+	PACKET_TYPE_TAP,
+	PACKET_TYPE_ANDROID_ORIENT,
+	PACKET_TYPE_PEDO,
+	PACKET_TYPE_MISC,
+	PACKET_TYPE_COMPASS,
+};
+
 /* Exported constants --------------------------------------------------------*/
+
+#define PRINT_ACCEL        (0x01)
+#define PRINT_GYRO         (0x02)
+#define PRINT_QUAT         (0x04)
+#define PRINT_COMPASS      (0x08)
+#define PRINT_EULER        (0x10)
+#define PRINT_ROT_MAT      (0x20)
+#define PRINT_HEADING      (0x40)
+#define PRINT_PEDO         (0x80)
+#define PRINT_LINEAR_ACCEL (0x100)
+
+#define ACCEL_ON        (0x01)
+#define GYRO_ON         (0x02)
+#define COMPASS_ON      (0x04)
+
+#define MOTION          (0)
+#define NO_MOTION       (1)
+
+#define DEFAULT_MPU_HZ  (200)
+
+#define FLASH_SIZE      (512)
+#define FLASH_MEM_START ((void*)0x1800)
+
+#define PEDO_READ_MS    (1000)
+#define TEMP_READ_MS    (500)
+#define COMPASS_READ_MS (5)
+
+/* IMU configuration */
+
 #define IMU_L
 //#define IMU_R
 
@@ -129,6 +199,8 @@ extern I2C_HandleTypeDef                   IMU_R_I2C_Handler;
 
 extern MPU9150_HandleTypeDef               IMU_L_Handler;
 extern MPU9150_HandleTypeDef               IMU_R_Handler;
+
+extern hal_s                               hal;
 
 /* Exported functions ------------------------------------------------------- */
 void Error_Handler(void);

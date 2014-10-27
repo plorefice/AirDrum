@@ -79,6 +79,7 @@ void IMU_L_IRQ_Handler (void)
 		HAL_GPIO_TogglePin (LED_IRQ_L_PORT, LED_IRQ_L_PIN);
 
 		IMU_L_Handler.DataRdy = 1;
+		hal.new_gyro = 1;
     
     __HAL_GPIO_EXTI_CLEAR_IT (IMU_L_IRQ_PIN);
   }
