@@ -59,6 +59,9 @@ I2C_HandleTypeDef                   IMU_R_I2C_Handler;
 MPU9150_HandleTypeDef               IMU_L_Handler;
 MPU9150_HandleTypeDef               IMU_R_Handler;
 
+float gyro_data[3] = { .0f }, compass_data[3] = { .0f };
+float compass_offset = .0f;
+
 hal_s                               hal;
 
 volatile uint32_t                   hal_timestamp = 0;
@@ -115,98 +118,99 @@ static void read_from_mpl(void)
 	int8_t accuracy;
 	unsigned long timestamp;
 	float float_data[3] = {0};
-
-	static uint16_t c = 0;
+	unsigned int i;
 	
-	if (++c == 1000)
-	{
-		MIDI_SendMsg(0x99, 0x26, 0x7F);
-		c = 0;
-	}
+	if (inv_get_sensor_type_gyro(data, &accuracy, (inv_time_t *) &timestamp))
+		for (i = 0; i < 3; i++)
+			gyro_data[i] = ((float)data[i] / (1L << 16));
 	
-	if (inv_get_sensor_type_quat(data, &accuracy, (inv_time_t*)&timestamp))
-	{
-	 /* Sends a quaternion packet to the PC. Since this is used by the Python
-		* test app to visually represent a 3D quaternion, it's sent each time
-		* the MPL has new data.
-		*/
-		eMPL_send_quat(data);
+	if (inv_get_sensor_type_compass(data, &accuracy, (inv_time_t *) &timestamp))
+		for (i = 0; i < 3; i++)
+			compass_data[i] = ((float)data[i] / (1L << 16));
+	
+//	if (inv_get_sensor_type_quat(data, &accuracy, (inv_time_t*)&timestamp))
+//	{
+//	 /* Sends a quaternion packet to the PC. Since this is used by the Python
+//		* test app to visually represent a 3D quaternion, it's sent each time
+//		* the MPL has new data.
+//		*/
+//		eMPL_send_quat(data);
 
-		/* Specific data packets can be sent or suppressed using USB commands. */
-		if (hal.report & PRINT_QUAT)
-			eMPL_send_data(PACKET_DATA_QUAT, data);
-	}
+//		/* Specific data packets can be sent or suppressed using USB commands. */
+//		if (hal.report & PRINT_QUAT)
+//			eMPL_send_data(PACKET_DATA_QUAT, data);
+//	}
 
-	if (hal.report & PRINT_ACCEL)
-	{
-		if (inv_get_sensor_type_accel(data, &accuracy, (inv_time_t*)&timestamp))
-			eMPL_send_data(PACKET_DATA_ACCEL, data);
-	}
-	if (hal.report & PRINT_GYRO)
-	{
-		if (inv_get_sensor_type_gyro(data, &accuracy, (inv_time_t*)&timestamp))
-			eMPL_send_data(PACKET_DATA_GYRO, data);
-	}
-#ifdef COMPASS_ENABLED
-	if (hal.report & PRINT_COMPASS)
-	{
-		if (inv_get_sensor_type_compass(data, &accuracy, (inv_time_t*)&timestamp))
-			eMPL_send_data(PACKET_DATA_COMPASS, data);
-	}
-#endif
-	if (hal.report & PRINT_EULER)
-	{
-		if (inv_get_sensor_type_euler(data, &accuracy, (inv_time_t*)&timestamp))
-			eMPL_send_data(PACKET_DATA_EULER, data);
-	}
-	if (hal.report & PRINT_ROT_MAT)
-	{
-		if (inv_get_sensor_type_rot_mat(data, &accuracy, (inv_time_t*)&timestamp))
-			eMPL_send_data(PACKET_DATA_ROT, data);
-	}
-	if (hal.report & PRINT_HEADING)
-	{
-		if (inv_get_sensor_type_heading(data, &accuracy, (inv_time_t*)&timestamp))
-			eMPL_send_data(PACKET_DATA_HEADING, data);
-	}
-	if (hal.report & PRINT_LINEAR_ACCEL)
-	{
-		if (inv_get_sensor_type_linear_acceleration(float_data, &accuracy, (inv_time_t*)&timestamp))
-		{
-			MPL_LOGI("Linear Accel: %7.5f %7.5f %7.5f\r\n",	float_data[0], float_data[1], float_data[2]);                                        
-		}
-	}
-	if (hal.report & PRINT_PEDO)
-	{
-		unsigned long timestamp;
-		timestamp = HAL_GetTick();
-		
-		if (timestamp > hal.next_pedo_ms)
-		{
-			hal.next_pedo_ms = timestamp + PEDO_READ_MS;
-			unsigned long step_count, walk_time;
-			dmp_get_pedometer_step_count(&step_count);
-			dmp_get_pedometer_walk_time(&walk_time);
-			MPL_LOGI("Walked %ld steps over %ld milliseconds..\n", step_count, walk_time);
-		}
-	}
+//	if (hal.report & PRINT_ACCEL)
+//	{
+//		if (inv_get_sensor_type_accel(data, &accuracy, (inv_time_t*)&timestamp))
+//			eMPL_send_data(PACKET_DATA_ACCEL, data);
+//	}
+//	if (hal.report & PRINT_GYRO)
+//	{
+//		if (inv_get_sensor_type_gyro(data, &accuracy, (inv_time_t*)&timestamp))
+//			eMPL_send_data(PACKET_DATA_GYRO, data);
+//	}
+//#ifdef COMPASS_ENABLED
+//	if (hal.report & PRINT_COMPASS)
+//	{
+//		if (inv_get_sensor_type_compass(data, &accuracy, (inv_time_t*)&timestamp))
+//			eMPL_send_data(PACKET_DATA_COMPASS, data);
+//	}
+//#endif
+//	if (hal.report & PRINT_EULER)
+//	{
+//		if (inv_get_sensor_type_euler(data, &accuracy, (inv_time_t*)&timestamp))
+//			eMPL_send_data(PACKET_DATA_EULER, data);
+//	}
+//	if (hal.report & PRINT_ROT_MAT)
+//	{
+//		if (inv_get_sensor_type_rot_mat(data, &accuracy, (inv_time_t*)&timestamp))
+//			eMPL_send_data(PACKET_DATA_ROT, data);
+//	}
+//	if (hal.report & PRINT_HEADING)
+//	{
+//		if (inv_get_sensor_type_heading(data, &accuracy, (inv_time_t*)&timestamp))
+//			eMPL_send_data(PACKET_DATA_HEADING, data);
+//	}
+//	if (hal.report & PRINT_LINEAR_ACCEL)
+//	{
+//		if (inv_get_sensor_type_linear_acceleration(float_data, &accuracy, (inv_time_t*)&timestamp))
+//		{
+//			MPL_LOGI("Linear Accel: %7.5f %7.5f %7.5f\r\n",	float_data[0], float_data[1], float_data[2]);                                        
+//		}
+//	}
+//	if (hal.report & PRINT_PEDO)
+//	{
+//		unsigned long timestamp;
+//		timestamp = HAL_GetTick();
+//		
+//		if (timestamp > hal.next_pedo_ms)
+//		{
+//			hal.next_pedo_ms = timestamp + PEDO_READ_MS;
+//			unsigned long step_count, walk_time;
+//			dmp_get_pedometer_step_count(&step_count);
+//			dmp_get_pedometer_walk_time(&walk_time);
+//			MPL_LOGI("Walked %ld steps over %ld milliseconds..\n", step_count, walk_time);
+//		}
+//	}
 
-	/* Whenever the MPL detects a change in motion state, the application can
-	 * be notified. For this example, we use an LED to represent the current
-	 * motion state.
-	 */
-	msg = inv_get_message_level_0(INV_MSG_MOTION_EVENT | INV_MSG_NO_MOTION_EVENT);
-	if (msg)
-	{
-		if (msg & INV_MSG_MOTION_EVENT)
-		{
-			MPL_LOGI("Motion!\n");
-		}
-		else if (msg & INV_MSG_NO_MOTION_EVENT)
-		{
-			MPL_LOGI("No motion!\n");
-		}
-	}
+//	/* Whenever the MPL detects a change in motion state, the application can
+//	 * be notified. For this example, we use an LED to represent the current
+//	 * motion state.
+//	 */
+//	msg = inv_get_message_level_0(INV_MSG_MOTION_EVENT | INV_MSG_NO_MOTION_EVENT);
+//	if (msg)
+//	{
+//		if (msg & INV_MSG_MOTION_EVENT)
+//		{
+//			MPL_LOGI("Motion!\n");
+//		}
+//		else if (msg & INV_MSG_NO_MOTION_EVENT)
+//		{
+//			MPL_LOGI("No motion!\n");
+//		}
+//	}
 }
 
 
@@ -615,7 +619,7 @@ int main(void)
   MX_I2C_Init ();
 	MX_IRQ_Init ();
 
-//  MX_IMU_Init ();
+  MX_IMU_Init ();
 	
 //  /* Code generated for FreeRTOS */
 //  /* Create Start thread */
@@ -861,6 +865,52 @@ int main(void)
 			 */
 			read_from_mpl();
     }
+		
+		{
+			MPU9150_ClickTypeDef *cs = &(IMU_L_Handler.Click);
+			float                  z = gyro_data[2];
+			
+			if(cs->Z.Clicking)                              // If I'm detecting a click
+			{
+				if (z >= 30.0f)                       // and I'm above the threshold
+				{ 
+					cs->Z.Force = (z > cs->Z.Force) ?           // update the maximum.
+												 z : cs->Z.Force;   
+				}
+				else                                          // If I'm not above the threshold
+				{                                
+					cs->Z.Clicked  = 1;                         // a click has been detected
+					cs->Z.Velocity = (uint8_t)                  // and the velocity is calculated
+						((cs->Z.Force / (float)(2000)) * 127.0f);  // based on the strength.
+					
+					cs->Z.Clicking = 0;                         // Save everything and reset click
+					cs->Z.Force    = 0;                         // and maximum strength.
+				}
+			}
+			else if(z > 30.0f)                      // If I have not started dectection,
+			{
+				cs->Z.Force    = z;                           // updated the maximum
+				cs->Z.Clicking = 1;                           // and start detecting.
+			}
+			
+			if (GPIO_PIN_SET   == HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0))
+				compass_offset = compass_data[2];
+			
+			if (cs->Z.Clicked)
+			{
+				float cmp = compass_data[2] - compass_offset;
+				
+				cs->Z.Clicked = 0;
+				
+				if (cmp > 25.0f)
+					MIDI_SendMsg(0x99, 0x31, cs->Z.Velocity);
+				else if (cmp > -5.0f)
+					MIDI_SendMsg(0x99, 0x2D, cs->Z.Velocity);
+				else if (cmp > -35.0f)
+					MIDI_SendMsg(0x99, 0x26, cs->Z.Velocity);
+					
+			}
+		}
   }
 }
 
@@ -981,7 +1031,7 @@ static void MX_IMU_Init (void)
   IMU_L_Handler.Click.MaxForce              = IMU_MAX_FORCE;
   IMU_L_Handler.Click.Threshold             = IMU_GYRO_THRESHOLD;
   
-  MPU9150_Init (&IMU_L_Handler);
+  //MPU9150_Init (&IMU_L_Handler);
 #endif
 	
 #ifdef IMU_R
@@ -1002,7 +1052,7 @@ static void MX_IMU_Init (void)
   IMU_R_Handler.Click.MaxForce              = IMU_MAX_FORCE;
   IMU_R_Handler.Click.Threshold             = IMU_GYRO_THRESHOLD;
   
-  MPU9150_Init (&IMU_R_Handler);
+  //MPU9150_Init (&IMU_R_Handler);
 #endif
 }
 
